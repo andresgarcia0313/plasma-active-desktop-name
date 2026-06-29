@@ -1,0 +1,19 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "com.github.andresgarcia0313.activedesktopname",
+        "Name": "Active Desktop Name",
+        "Name[es]": "Nombre del escritorio activo",
+        "Description": "Shows the name of the active virtual desktop",
+        "Description[es]": "Muestra el nombre del escritorio virtual activo",
+        "Icon": "preferences-desktop-virtual",
+        "Authors": [
+            { "Name": "Andres Garcia", "Email": "andresgarcia0313@gmail.com" }
+        ],
+        "Category": "Windows and Tasks",
+        "License": "GPL-3.0",
+        "Version": "1.2.1",
+        "Website": "https://github.com/andresgarcia0313/plasma-active-desktop-name"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
