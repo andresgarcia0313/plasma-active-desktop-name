@@ -1,0 +1,12 @@
+pkgbase = plasma6-applets-active-desktop-name
+	pkgdesc = Plasma 6 widget that shows the name of the active virtual desktop
+	pkgver = 1.2.1
+	pkgrel = 1
+	url = https://github.com/andresgarcia0313/plasma-active-desktop-name
+	arch = any
+	license = GPL-3.0-only
+	depends = plasma-workspace
+	source = plasma6-applets-active-desktop-name-1.2.1.tar.gz::https://github.com/andresgarcia0313/plasma-active-desktop-name/archive/refs/tags/v1.2.1.tar.gz
+	sha256sums = 553d6cf8ee3a807e3911a04d251a14437558d5e4c07e9485d4a8f99e223d95a3
+
+pkgname = plasma6-applets-active-desktop-name
