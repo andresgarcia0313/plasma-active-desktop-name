@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Build plasmoid zip
+        run: |
+          PKG="plasma-active-desktop-name-${VERSION}"
+          mkdir -p "dist/${PKG}"
+          cp -a contents metadata.json "dist/${PKG}/"
+          (cd "dist/${PKG}" && zip -r "../${PKG}.zip" .)
+          echo "ASSET=dist/${PKG}.zip" >> "$GITHUB_ENV"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ASSET }}
+          generate_release_notes: true
+
+  publish-aur:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Compute source tarball checksum
+        run: |
+          URL="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz"
+          for i in $(seq 1 10); do
+            if curl -fsSL "$URL" -o src.tar.gz; then break; fi
+            sleep 6
+          done
+          SHA=$(sha256sum src.tar.gz | cut -d' ' -f1)
+          echo "SRC_SHA256=${SHA}" >> "$GITHUB_ENV"
+
+      - name: Update PKGBUILD and .SRCINFO
+        run: |
+          cd packaging/aur
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          sed -i "s/^sha256sums=.*/sha256sums=('${SRC_SHA256}')/" PKGBUILD
+          sed -i "s/^\tpkgver = .*/\tpkgver = ${VERSION}/" .SRCINFO
+          sed -i "s/^\tpkgrel = .*/\tpkgrel = 1/" .SRCINFO
+          sed -i "s|^\tsource = .*|\tsource = plasma6-applets-active-desktop-name-${VERSION}.tar.gz::https://github.com/andresgarcia0313/plasma-active-desktop-name/archive/refs/tags/v${VERSION}.tar.gz|" .SRCINFO
+          sed -i "s/^\tsha256sums = .*/\tsha256sums = ${SRC_SHA256}/" .SRCINFO
+
+      - name: Publish to AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        with:
+          pkgname: plasma6-applets-active-desktop-name
+          pkgbuild: packaging/aur/PKGBUILD
+          assets: packaging/aur/.SRCINFO
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Release ${{ env.VERSION }}"
+          force_push: "true"
